@@ -86,24 +86,7 @@ def occ_per_coll_in_csv(fn):
     return coll_occ_cts
 
 
-# def deduplicate(fn, out):
-#     occ_ids={}
-#     with open(fn, newline='') as csvfile_in:
-#         reader = csv.DictReader(csvfile_in, dialect=DIALECT)
-#         with open(out, 'w', newline='') as csvfile_out:
-#             writer = csv.DictWriter(csvfile_out, fieldnames=reader.fieldnames, dialect=DIALECT)
-#             writer.writeheader()
-#             for idx, row in enumerate(reader):
-#                 occ_id = row['occid']
-#                 coll_id = row['collid']
-#                 if idx % 10000 == 0:
-#                     print(idx)
-#                 if coll_id not in occ_ids:
-#                     occ_ids[coll_id] = []
-#                 if occ_id not in occ_ids[coll_id]:
-#                     occ_ids[coll_id].append(occ_id)
-#                     writer.writerow(row)
-
+# Modify to work with the translated file
 def deduplicate(fn, out):
     occ_ids={}
     with open(fn, newline='') as csvfile_in:

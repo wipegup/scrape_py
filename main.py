@@ -5,15 +5,12 @@ import log_utils
 import os
 from time import sleep
 
-# Create Checker v constituent and "all" record count -- Find out where discrepancies are
-# Create Loop for pulling all collection counts
-# Reformat occur_req_log output to be on multiple lines
-# Combine JSON into CSVs (convert during download? and RM JSON while downloading?)
-# Combine CSVs into big CSV
-# Speed test on opening/re-opening files for writing. 
-# underscores for spaces in variable names
+#######################
+## Modify as desired for different directory
+run_no='1'
+################
 
-run_no=6
+### Do not modify below this line
 request_sleep=2
 allowed_error_ct=5
 occur_req_interval=10
@@ -145,6 +142,8 @@ for coll_info in hf['full_coll']['res']:
             hf['count']['json'] = utils.file_line_count(raw_fn)
             hf['time']['interval'] = log_utils.occur_interval(hf, occur_request_ct)
 
+
+## TODO:
 # Check if CSV contains same records as all records
 # If not re-download individual collection information.
 # Print a happy message
