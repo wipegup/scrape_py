@@ -1,0 +1,8 @@
+examples/
+raw/
+*.tsv*
+*.json
+test.py
+*.txt
+__pycache__/
+.DS_Store
