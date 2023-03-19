@@ -60,7 +60,7 @@ def add_json_to_dl_csv(in_json, out_csv):
 def add_json_to_csv(in_json, out_csv, fieldnames):
     csv_exists = os.path.exists(out_csv)
     default = {k:None for k in fieldnames}
-    with open(out_csv, 'a', newline='') as csvfile:
+    with open(out_csv, 'a', newline='', encoding='UTF-8') as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames, dialect=DIALECT)
         if not csv_exists:
             writer.writeheader()

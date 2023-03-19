@@ -82,7 +82,7 @@ def write_pretty_json(fn, d):
         f.write('\n}')
 
 def append_results(fn, lst):
-    with open(fn, 'a') as f:
+    with open(fn, 'a', encoding='UTF-8') as f:
         for i in lst:
             f.write(f'{json.dumps(i)}\n')
 

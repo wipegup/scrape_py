@@ -7,12 +7,10 @@ from time import sleep
 
 #######################
 ## Modify as desired for different directory
-run_no='1'
+run_no='t'
 ################
 
 ### Do not modify below this line
-request_sleep=2
-allowed_error_ct=5
 occur_req_interval=10
 
 save_dir = f'./raw/run_{run_no}/'
