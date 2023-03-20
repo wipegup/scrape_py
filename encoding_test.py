@@ -10,6 +10,10 @@ out_dl_tsv = f'{save_dir}full_trans.tsv'
 if not os.path.exists(save_dir):
     os.makedirs(save_dir)
 
+for f in [json_fn, out_tsv, out_dl_tsv]:
+    if os.path.exists(f):
+        os.remove(f)
+        
 _, occs, _ = utils.get_occ(coll_id=2)
 
 utils.append_results(json_fn, occs)

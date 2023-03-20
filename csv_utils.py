@@ -55,9 +55,9 @@ def add_json_to_raw_csv(in_json, out_csv):
     add_json_to_csv(in_json, out_csv, fieldnames)
 
 def add_json_to_dl_csv(in_json, out_csv):
-    add_json_to_csv(in_json, out_csv, COL_LIST)
+    add_json_to_csv(in_json, out_csv, COL_LIST, json_convert=convert_api_to_dl)
 
-def add_json_to_csv(in_json, out_csv, fieldnames):
+def add_json_to_csv(in_json, out_csv, fieldnames, json_convert=lambda x:x):
     csv_exists = os.path.exists(out_csv)
     default = {k:None for k in fieldnames}
     with open(out_csv, 'a', newline='', encoding='UTF-8') as csvfile:
@@ -68,7 +68,9 @@ def add_json_to_csv(in_json, out_csv, fieldnames):
         if line_ct > 0:
             with open(in_json, 'r') as f:
                 for line in f:
-                    writer.writerow({k:v for k,v in {**default, **json.loads(line)}.items() if k in fieldnames})
+                    j = json_convert({**default, **json.loads(line)})
+                    sub_j = {k:v for k,v in j.items() if k in fieldnames}
+                    writer.writerow(sub_j)
 
 def csv_line_count(fn):
     return utils.file_line_count(fn) - 1
