@@ -123,13 +123,13 @@ for coll_info in hf['full_coll']['res']:
         new_req = offset + len(results) < total_record_ct
         if not new_req:
             utils.verify_coll_complete(hf['occur_req_log']['body'][coll_id], coll_id, raw_fn)
-            print(f"Adding records to TSV; Deleting Raw JSON; Updating TSV record count")
+            print(f"Adding records to TSV; KEEPING Raw JSON; Updating TSV record count")
             csv_utils.add_json_to_raw_csv(raw_fn, out_tsv)
             csv_utils.add_json_to_dl_csv(raw_fn, out_dl_tsv)
             records_added = utils.file_line_count(raw_fn)
             hf['occur_req_log']['body'][coll_id]['tsv_records'] = records_added
             hf['count']['tsv'] += records_added
-            os.remove(raw_fn)
+            # os.remove(raw_fn)
             hf['occur_req_log']['body'][coll_id]['done'] = True
         
         rewrite_hf(hf, 'occur_req_log')
