@@ -3,6 +3,8 @@ import os
 import json
 from datetime import datetime
 from request_manager import RequestManager
+import log_utils
+import re
 
 API_ROOT = "https://lichenportal.org/portal/api/v2"
 
@@ -48,7 +50,7 @@ def res_success (res, msg, silent):
         body = res_body(res)
         return (body_count(body), body_results(body), body)
 
-def get_occ(offset=0, limit=300, coll_id=None):
+def get_occ(offset=0, limit=0, coll_id=None):
     extra = {'collid': coll_id} if coll_id else {}
     msg = f"Occur- CollID: {coll_id}; Offset: {offset}; Limit: {limit}"
     return get_paginated(occ_endpoint(), offset=offset, limit=limit, extra=extra)
@@ -57,20 +59,37 @@ def get_coll():
     msg = "Collection Request"
     return get_paginated(coll_endpoint(), msg=msg)
 
-def get_all_coll_occ(coll_id, starting_offset=None):
-    new_req=True
-    offset = -300 if starting_offset is None else starting_offset
-    while new_req:
-        offset += 300
-        total_record_ct, results, body = get_occ(offset=offset, coll_id=coll_id)
-        yield (offset, total_record_ct, results, body)
-        new_req = offset + len(results) < total_record_ct
+## Unused Generator function
+# def get_all_coll_occ(coll_id, starting_offset=None):
+#     new_req=True
+#     offset = -300 if starting_offset is None else starting_offset
+#     while new_req:
+#         offset += 300
+#         total_record_ct, results, body = get_occ(offset=offset, coll_id=coll_id)
+#         yield (offset, total_record_ct, results, body)
+#         new_req = offset + len(results) < total_record_ct
 
-## File Management
+def get_full_info(n, f, head_dir):
+    to_ret={}
+    k = f'full_{n}'
+    pretty = k.replace('_', ' ')
+    print(f"\nFinding {pretty} info --")
+    to_ret['fn'] = f'{head_dir}{k}.json'
+    to_ret['ct'], to_ret['res'], to_ret['body'] = read_or_create_file( to_ret['fn'], f, pretty)
+    print(f"{pretty.capitalize()} Count: {to_ret['ct']:,}")
+    return to_ret
+
+## File Management      
 def read_json(fn):
     with open(fn, 'r') as f:
         return json.loads(f.read())
 
+def json_fn(raw_dir, coll_id):
+    return f"{raw_dir}{coll_id}.jsonl"
+
+def fn_to_coll_id(fn):
+    return fn.split('/')[-1].replace('.jsonl', '')
+    
 def write_pretty_json(fn, d):
     with open(fn, 'w') as f:
         f.write('{\n')
@@ -96,18 +115,16 @@ def file_line_count(fn):
     else:
         return 0
 
-## Other
-def verify_coll_complete(req_log, coll_id, fn):
-    loc = 'TSV' if req_log['tsv_records'] == req_log['occur_total'] else None
+def rewrite_hf(head_file_dict, k):
+    write_pretty_json(head_file_dict[k]['fn'], head_file_dict[k]['body'])
 
-    json_total = file_line_count(fn)
-    loc = 'JSON' if json_total == req_log['occur_total'] else loc
-    
-    if loc:
-        print(f"All Records in {loc} for Collection {coll_id}")
+## Other
+def verify_coll_complete(req_log, coll_id, json_total):
+    if json_total == req_log['occur_total']:
+        print(f"All occurs accounted for with collection {coll_id}")
         return True
     else:
-        print(f"WARN: Collection {coll_id} record mismatch -- Json/TSV(Expected): In {json_total}{req_log['tsv_records']}({req_log['occur_total']})")
+        print(f"WARN: collection {coll_id} file record mismatch -- actual(expected): {json_total}({req_log['occur_total']})")
         return False
 
 def read_or_create_file(fn, func, msg):

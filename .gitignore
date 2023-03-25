@@ -1,5 +1,6 @@
 examples/
 raw/
+downloads/
 *.tsv*
 *.json
 test.py

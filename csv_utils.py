@@ -3,6 +3,7 @@ import utils
 import json
 import os
 from datetime import datetime
+import re
 
 DIALECT = 'excel-tab'
 COL_LIST = ['id', 'institutionCode', 'collectionCode', 'ownerInstitutionCode', 'basisOfRecord', 'occurrenceID',
@@ -20,8 +21,21 @@ COL_LIST = ['id', 'institutionCode', 'collectionCode', 'ownerInstitutionCode', '
     'minimumDepthInMeters', 'maximumDepthInMeters', 'verbatimDepth', 'verbatimElevation', 'disposition', 'language', 'recordEnteredBy',
     'modified', 'sourcePrimaryKey-dbpk', 'collID', 'recordID', 'references']
 
-def convert_api_to_dl(j):
+def clean_dict_val_whitespace(j):
+    return {k: re.sub(r'\s+', ' ', v) if type(v) == str else v  for k,v in j.items()}
+
+def clean_json_file_whitespace(in_json, out_json):
+    with open(out_json, 'w') as out_f:
+        with open(in_json, 'r') as in_f:
+            for row in in_f:
+                j = json.loads(row)
+                j = clean_dict_val_whitespace(j)
+                out_f.write(f'{json.dumps(j)}\n')
+
+def convert_api_to_dl(j, **to_update):
     occ_id = str(j['occid'])
+    # j['institutionCode'] = ## FROM COLL DATA
+    j.update(**to_update)
     j['id'] = occ_id
     if j['sciname'] is not None:
         j['specificEpithet'] = j['sciname'].split(' ')[1] if ' ' in j['sciname'] else ''
@@ -34,7 +48,6 @@ def convert_api_to_dl(j):
     j['taxonID'] = str(j['tidinterpreted'])
     j['sourcePrimaryKey-dbpk'] = j['dbpk']
     j['references'] = f'https://lichenportal.org/portal/collections/individual/index.php?occid={occ_id}'
-    # j['institutionCode'] = ## FROM COLL DATA
     j['collID'] = str(j['collid'])
     return j
 
@@ -54,10 +67,10 @@ def add_json_to_raw_csv(in_json, out_csv):
 
     add_json_to_csv(in_json, out_csv, fieldnames)
 
-def add_json_to_dl_csv(in_json, out_csv):
-    add_json_to_csv(in_json, out_csv, COL_LIST, json_convert=convert_api_to_dl)
+def add_json_to_dl_csv(in_json, out_csv, **to_update):
+    add_json_to_csv(in_json, out_csv, COL_LIST, json_convert=convert_api_to_dl, **to_update)
 
-def add_json_to_csv(in_json, out_csv, fieldnames, json_convert=lambda x:x):
+def add_json_to_csv(in_json, out_csv, fieldnames, json_convert=lambda x:x, **convert_args):
     csv_exists = os.path.exists(out_csv)
     default = {k:None for k in fieldnames}
     with open(out_csv, 'a', newline='', encoding='UTF-8') as csvfile:
@@ -68,7 +81,7 @@ def add_json_to_csv(in_json, out_csv, fieldnames, json_convert=lambda x:x):
         if line_ct > 0:
             with open(in_json, 'r') as f:
                 for line in f:
-                    j = json_convert({**default, **json.loads(line)})
+                    j = json_convert({**default, **json.loads(line)}, **convert_args)
                     sub_j = {k:v for k,v in j.items() if k in fieldnames}
                     writer.writerow(sub_j)
 
@@ -87,30 +100,48 @@ def occ_per_coll_in_csv(fn):
             coll_occ_cts[coll_id] +=1
     return coll_occ_cts
 
-
-# Modify to work with the translated file
-def deduplicate(fn, out):
+# Deduplicate JSON
+def deduplicate_json(fn):
     occ_ids={}
-    with open(fn, newline='') as csvfile_in:
-        reader = csv.DictReader(csvfile_in, dialect=DIALECT)
-        with open(out, 'w', newline='') as csvfile_out:
-            writer = csv.DictWriter(csvfile_out, fieldnames=reader.fieldnames, dialect=DIALECT)
-            writer.writeheader()
-            for idx, row in enumerate(reader):
-                occ_id = row['occid']
-                coll_id = row['collid']
-                if idx % 10000 == 0:
-                    print(idx)
-                if coll_id not in occ_ids:
-                    occ_ids[coll_id] = {}
-                occ_id_k = occ_id[:2]
-                occ_id_v = occ_id[2:]
-                if occ_id_k not in occ_ids[coll_id]:
-                    occ_ids[coll_id][occ_id_k] = []
+    to_write=[]
+    with open(fn,'r') as f:
+        for row in f:
+            j = json.loads(row)
+            occ_id = str(j['occid'])
+            occ_id_k = occ_id[:2]
+            occ_id_v = occ_id[2:]
+            if occ_id_k not in occ_ids:
+                occ_ids[occ_id_k] = []
+            if occ_id_v not in occ_ids[occ_id_k]:
+                to_write.append(j)
+                occ_ids[occ_id_k].append(occ_id_v)
+    with open(fn, 'w') as f:
+        for r in to_write:
+            f.write(f'{json.dumps(r)}\n')
 
-                if occ_id_v not in occ_ids[coll_id][occ_id_k]:
-                    occ_ids[coll_id][occ_id_k].append(occ_id_v)
-                    writer.writerow(row)
+# Deduplicate CSV  (Unused)                  
+# def deduplicate(fn, out):
+#     occ_ids={}
+#     with open(fn, newline='') as csvfile_in:
+#         reader = csv.DictReader(csvfile_in, dialect=DIALECT)
+#         with open(out, 'w', newline='') as csvfile_out:
+#             writer = csv.DictWriter(csvfile_out, fieldnames=reader.fieldnames, dialect=DIALECT)
+#             writer.writeheader()
+#             for idx, row in enumerate(reader):
+#                 occ_id = row['occid']
+#                 coll_id = row['collid']
+#                 if idx % 10000 == 0:
+#                     print(idx)
+#                 if coll_id not in occ_ids:
+#                     occ_ids[coll_id] = {}
+#                 occ_id_k = occ_id[:2]
+#                 occ_id_v = occ_id[2:]
+#                 if occ_id_k not in occ_ids[coll_id]:
+#                     occ_ids[coll_id][occ_id_k] = []
+
+#                 if occ_id_v not in occ_ids[coll_id][occ_id_k]:
+#                     occ_ids[coll_id][occ_id_k].append(occ_id_v)
+#                     writer.writerow(row)
 
 
 ## Deduplication Test

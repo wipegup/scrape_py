@@ -6,17 +6,18 @@ def print_exception_error(error_ct, allowed_error_ct, inst):
 
 def occur_interval(hf, occur_request_ct):
     have_need = have_need_req_str(hf)
-    now, interval_string = interval_update_string(hf, 'occur')
-    session_records = (hf['count']['tsv'] + hf['count']['json']) - hf['count']['start']
-    print(f"Request # {occur_request_ct} {interval_string} {have_need} {session_records:,} Records this session")
-    return now
+    session_records = collected_record_ct(hf) - hf['count']['start']
+    init_str = f"Request # {occur_request_ct} {have_need} {session_records:,} Records this session"
+    return interval_update(hf, 'occur', init_str)
 
+def collected_record_ct(hf):
+    return sum([v for k,v in hf['count'].items() if k != 'start'])
 
 def have_need_req(hf):
     print(have_need_req_str(hf))
 
 def have_need_req_str(hf):
-    curr = (hf['count']['tsv'] + hf['count']['json'])
+    curr = collected_record_ct(hf)
     need = hf['full_occur']['ct']
     api_reqs = round((need - curr)/300)
     s = f"Have {curr:,} / {need:,} records. ~{api_reqs:,} more API reqs."
@@ -24,8 +25,10 @@ def have_need_req_str(hf):
 
 def start_time(hf, k):
     full_k= f'{k}_start'
-    s = f"{k.capitalize()} pull started at {utils.pretty_time(hf['time'][full_k])}"
+    hf['time'][full_k] = hf['time']['interval'] = utils.mark_time()
+    s = f"{k.capitalize()} work started at {utils.pretty_time(hf['time'][full_k])}"
     print(s)
+    return hf
 
 
 def interval_update_string(hf, k):
@@ -36,5 +39,6 @@ def interval_update_string(hf, k):
 
 def interval_update(hf, k, init_str):
     now, s = interval_update_string(hf, k)
+    hf['time']['interval'] = now
     print(f"{init_str}{s}")
-    return now
+    return hf
