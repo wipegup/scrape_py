@@ -2,6 +2,7 @@ import pandas as pd
 import dirs
 import os
 import datetime
+import log_utils
 if __name__== "__main__":
     import argparse
     parser = argparse.ArgumentParser()
@@ -12,6 +13,7 @@ if __name__== "__main__":
     # parser.add_argument('--diff')
 
     args = parser.parse_args()
+    hf = log_utils.create_default_timing_dict()
 
     if args.recent:
         tsv_dir = dirs.tsv_dir(args.run_no)
@@ -19,7 +21,7 @@ if __name__== "__main__":
         tsv_fns = [f for f in os.listdir(tsv_dir) if f.endswith('.tsv') and not f.endswith('days.tsv')]
 
         tsv_fn = tsv_fns[0]
-
+        hf = log_utils.start_time(hf, 'recent_tsv')
         for tsv_fn in tsv_fns:
             new_fn = f"{tsv_dir}{tsv_fn.replace('.tsv', '')}_last{args.days}days.tsv"
             df = pd.read_csv(f'{tsv_dir}{tsv_fn}', sep='\t')
@@ -31,3 +33,4 @@ if __name__== "__main__":
             prev_date = datetime.datetime.now() - datetime.timedelta(days=args.days)
             recent_df = df[df[mod_col]> prev_date]
             recent_df.to_csv(new_fn, sep='\t', index=False)
+        hf = log_utils.interval_update(hf, 'recent_tsv', 'Done finding recent records')

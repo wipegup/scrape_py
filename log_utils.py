@@ -42,3 +42,6 @@ def interval_update(hf, k, init_str):
     hf['time']['interval'] = now
     print(f"{init_str}{s}")
     return hf
+
+def create_default_timing_dict():
+    return {'time': {}}
