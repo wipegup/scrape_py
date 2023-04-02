@@ -167,14 +167,13 @@ def transform(raw_dir, head_dir, clean_dir, tsv_dir, out_dl_tsv, no_dedup):
     hf = log_utils.interval_update(hf, 'write_tsv', 'Done Writing to TSV')
 
 def main(run_no, output_fn, no_transform, no_download, test_dl, no_dedup, occur_log_interval):
-    
+    import dirs
     occur_log_interval=10
 
-    save_dir = f'./downloads/run_{run_no}/'
-    head_dir = f'{save_dir}head/'
-    raw_dir = f'{save_dir}raw/'
-    clean_dir = f'{save_dir}clean_ws/'
-    tsv_dir = f'{save_dir}tsvs/'
+    head_dir = dirs.head_dir(run_no)
+    raw_dir = dirs.raw_dir(run_no)
+    clean_dir = dirs.clean_dir(run_no)
+    tsv_dir = dirs.tsv_dir(run_no)
     out_dl_tsv = f'{tsv_dir}{output_fn}.tsv'
 
     if not no_download:

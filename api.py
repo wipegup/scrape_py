@@ -7,16 +7,16 @@ if __name__ == "__main__":
 
     parser.add_argument('--total', action='store_true')
     parser.add_argument('--coll', type=int)
-    parser.add_argument('--all-coll', actions='store_true')
-    parser.add_argument('--coll-count', actions='store_true')
+    parser.add_argument('--all-coll', action='store_true')
+    parser.add_argument('--coll-count', action='store_true')
 
     args = parser.parse_args()
 
     if args.total:
         ct, *_ = utils.get_occ()
-        print(f"Total Occurs = {ct}")
+        print(f"Total Occurs = {ct:,}")
 
-    if args.coll or args.all_coll or args.coll_ct:
+    if args.coll or args.all_coll or args.coll_count:
         coll_ct, coll_res, _ = utils.get_coll()
 
     if args.coll:
