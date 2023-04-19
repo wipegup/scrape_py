@@ -45,7 +45,7 @@ if __name__== "__main__":
                         for line in f:
         
                 
-                            diffs.append({'description': desc, 'occid': json.loads(line)['occid'], 'collid': collid, 'prev': '', 'curr': '' })  
+                            diffs.append({'description': desc, 'occid': json.loads(line)['occid'], 'collid': collid, 'column': 'collid', 'prev': '', 'curr': '' })  
         else:
             collids = [args.coll]
 
@@ -60,6 +60,7 @@ if __name__== "__main__":
                 if not os.path.exists(dirs.clean_dir(r, 'tsvs/')):
                     os.makedirs(dirs.clean_dir(r, 'tsvs/'))
                 if not os.path.exists(dirs.clean_dir(r, t_fn)):
+                    print('need to create tsvs', t_fn, j_fn)
                     if os.path.exists(dirs.clean_dir(r, j_fn)):
                         csv_utils.add_json_to_raw_csv(dirs.clean_dir(r, j_fn), dirs.clean_dir(r, t_fn))
 
@@ -75,22 +76,20 @@ if __name__== "__main__":
 
             for desc, occids in zip(['added occid', 'dropped occid'],   [fresh_occids, stale_occids]):
                 for occid in occids:
-                    diffs.append({'description': desc, 'occid': occid, 'collid': collid, 'prev': '', 'curr': '' })
+                    diffs.append({'description': desc, 'occid': occid, 'collid': collid, 'column': 'collid', 'prev': '', 'curr': '' })
             
             diffs = pd.DataFrame(diffs)
                 
             # Need to reorder and reindex both DFs just in case
 
             for col in new_df.columns:
-                # print(np.where(old_df[col] == new_df[col] | (old_df[col] != old_df[col] & new_df[col] != new_df[col])), [new_df[col], old_df[col], col], np.nan)
                 d = ~(old_df[col] == new_df[col]) | ((old_df[col] != old_df[col]) & (new_df[col] != new_df[col]))
                 changed_recs = new_df[d]
                 if new_df[d].shape[0] > 0:
-                    to_add = pd.DataFrame({'description': 'changed value', 'occid':new_df[d]['occid'], 'collid': collid, 'prev':old_df[d][col], 'curr': new_df[d][col]})
+                    to_add = pd.DataFrame({'description': 'changed value', 'occid':new_df[d]['occid'], 'collid': collid, 'column': col, 'prev':old_df[d][col], 'curr': new_df[d][col]})
                     diffs = pd.concat([diffs, to_add])    
-                    print(diffs)
 
-            hf = log_utils.interval_update(hf, 'compare_cells', f'Done comparing cells for {collid}, {len(collids) - idx -1} colls left')    
+            hf = log_utils.interval_update(hf, 'compare_cells', f'Done comparing cells for {collid}; {len(collids) - idx -1} colls left')    
         hf = log_utils.interval_update(hf, 'compare_cells', f'Done comparing cells writing diff tsv to {diff_fn}')
 
         diffs.to_csv(diff_fn, sep='\t', index=False)    
