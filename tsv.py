@@ -44,11 +44,10 @@ if __name__== "__main__":
                     collid = f.replace('.jsonl', '')
                     with open(f'{path}{f}', 'r') as f:
                         for line in f:
-        
-                
                             diffs.append({'description': desc, 'occid': json.loads(line)['occid'], 'collid': collid, 'column': 'collid', 'prev': '', 'curr': '' })  
         else:
             collids = [args.coll]
+        diffs = pd.DataFrame(diffs)
 
         hf = log_utils.start_time(hf, 'compare_cells')
         
@@ -76,10 +75,9 @@ if __name__== "__main__":
             old_df = old_df[old_df['occid'].isin(common_occids)].sort_values(['occid']).reset_index(drop=True)
 
             for desc, occids in zip(['added occid', 'dropped occid'],   [fresh_occids, stale_occids]):
-                for occid in occids:
-                    diffs.append({'description': desc, 'occid': occid, 'collid': collid, 'column': 'collid', 'prev': '', 'curr': '' })
+                changes = pd.DataFrame([{'description': desc, 'occid': occid, 'collid': collid, 'column': 'collid', 'prev': '', 'curr': '' } for occid in occids])
+                diffs = pd.concat([diffs, changes])
             
-            diffs = pd.DataFrame(diffs)
                 
             # Need to reorder and reindex both DFs just in case
 
