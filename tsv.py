@@ -27,7 +27,7 @@ if __name__== "__main__":
             raise Exception('Need to specify --prev-run for diff')
 
         diffs = []
-        diff_fn = dirs.tsv_dir(args.run_no, f'{args.prev_run}_diffs.tsv')
+        diff_fn = dirs.tsv_dir(args.run_no, f'diffs/{args.prev_run}.tsv')
         old_dir = dirs.clean_dir(args.prev_run)
         new_dir = dirs.clean_dir(args.run_no)
         if args.coll == 'all':

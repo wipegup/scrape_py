@@ -51,7 +51,7 @@ args:
 
 --prev-run: Required. Where to look for the "old" data.
 
-The script generates a file in `downloads/run_<new-run>/tsvs/<old-run>-diffs.tsv` describing changes.
+The script generates a file in `downloads/run_<new-run>/tsvs/diffs/<old-run>.tsv` describing changes.
 
 ## API Utils
 - `python api.py --total` -- Will hit the API and tell you the total number of occurrences
