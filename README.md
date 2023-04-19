@@ -39,6 +39,19 @@ When re-running the script it will ignore tsv files whose names end with `days.t
 
 --days: Optional. Must be int. Default: 30. How many days back to display data.
 
+## Diffs:
+
+To run:
+
+`python tsv.py --diff -r <new-run> --prev-run <old-run>`
+
+args:
+--diff: Required
+-r/ --run-no: Required. Where to look for the "new" data.  
+
+--prev-run: Required. Where to look for the "old" data.
+
+The script generates a file in `downloads/run_<new-run>/tsvs/<old-run>-diffs.tsv` describing changes.
 
 ## API Utils
 - `python api.py --total` -- Will hit the API and tell you the total number of occurrences
