@@ -49,7 +49,8 @@ if __name__== "__main__":
                     collid = f.replace('.jsonl', '')
                     with open(f'{path}{f}', 'r') as f:
                         for line in f:
-                            diffs.append({'description': desc, 'occid': json.loads(line)['occid'], 'collid': collid, 'column': 'collid', 'prev': '', 'curr': '' })  
+                            j = json.loads(line)
+                            diffs.append({'description': desc, 'occid': j['occid'], 'collid': collid, 'column': 'collid', 'prev': '', 'curr': '', 'locality': j['locality'], 'municipality': j['municipality'], 'country': j['country'], 'stateProvince': j['stateProvince'], 'country': j['county'] })  
         else:
             collids = [args.coll]
         diffs = pd.DataFrame(diffs)
@@ -76,21 +77,29 @@ if __name__== "__main__":
             fresh_occids = [i for i in new_occids if i not in old_occids]
             stale_occids = [i for i in old_occids if i not in new_occids]
             common_occids = [i for i in old_occids if i in new_occids]
+
+
+            for desc, df, occids in zip(['added occid', 'dropped occid'],  [new_df, old_df], [fresh_occids, stale_occids]):
+                changes = []
+                print(df)
+                print(desc)
+                for occid in occids:
+                    print(occid)
+                    d = df[df['occid'] == occid].iloc[0]
+                    changes.append({'description': desc, 'occid': d['occid'], 'collid': collid, 'column': 'collid', 'prev': '', 'curr': '', 'locality': d['locality'], 'municipality': d['municipality'], 'country': d['country'], 'stateProvince': d['stateProvince'], 'country': d['county'] })
+                changes = pd.DataFrame(changes)
+                diffs = pd.concat([diffs, changes])
+
             new_df = new_df[new_df['occid'].isin(common_occids)].sort_values(['occid']).reset_index(drop=True)
             old_df = old_df[old_df['occid'].isin(common_occids)].sort_values(['occid']).reset_index(drop=True)
-
-            for desc, occids in zip(['added occid', 'dropped occid'],   [fresh_occids, stale_occids]):
-                changes = pd.DataFrame([{'description': desc, 'occid': occid, 'collid': collid, 'column': 'collid', 'prev': '', 'curr': '' } for occid in occids])
-                diffs = pd.concat([diffs, changes])
-            
                 
             # Need to reorder and reindex both DFs just in case
-
-            for col in new_df.columns:
+            compare_columns = [c for c in new_df.columns if c not in ['dateLastModified']]
+            for col in compare_columns:
                 d = ~(old_df[col] == new_df[col]) | ((old_df[col] != old_df[col]) & (new_df[col] != new_df[col]))
                 changed_recs = new_df[d]
                 if new_df[d].shape[0] > 0:
-                    to_add = pd.DataFrame({'description': 'changed value', 'occid':new_df[d]['occid'], 'collid': collid, 'column': col, 'prev':old_df[d][col], 'curr': new_df[d][col]})
+                    to_add = pd.DataFrame({'description': 'changed value', 'occid':new_df[d]['occid'], 'collid': collid, 'column': col, 'prev':old_df[d][col], 'curr': new_df[d][col], 'locality': new_df[d]['locality'], 'municipality': new_df[d]['municipality'], 'country': new_df[d]['country'], 'stateProvince': new_df[d]['stateProvince'], 'country': new_df[d]['county']})
                     diffs = pd.concat([diffs, to_add])    
 
             hf = log_utils.interval_update(hf, 'compare_cells', f'Done comparing cells for {collid}; {len(collids) - idx -1} colls left')    
