@@ -36,7 +36,7 @@ if __name__== "__main__":
             old_files = [f for f in list(os.listdir(old_dir)) if f.endswith('.jsonl')]
             fresh_files = [f for f in new_files if f not in old_files]
             stale_files = [f for f in old_files if f not in new_files]
-            common_files = [f for f in new_files if f in old_files and utils.file_line_count(dirs.clean_dir(args.prev_run, f)) > 0)]
+            common_files = [f for f in new_files if f in old_files and utils.file_line_count(dirs.clean_dir(args.prev_run, f)) > 0]
             collids = [f.replace('.jsonl', '') for f in common_files]
 
             for desc, path, files in zip(['added occid', 'dropped occid'], [new_dir, old_dir], [fresh_files, stale_files]):
