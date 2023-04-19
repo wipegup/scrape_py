@@ -81,10 +81,8 @@ if __name__== "__main__":
 
             for desc, df, occids in zip(['added occid', 'dropped occid'],  [new_df, old_df], [fresh_occids, stale_occids]):
                 changes = []
-                print(df)
-                print(desc)
+
                 for occid in occids:
-                    print(occid)
                     d = df[df['occid'] == occid].iloc[0]
                     changes.append({'description': desc, 'occid': d['occid'], 'collid': collid, 'column': 'collid', 'prev': '', 'curr': '', 'locality': d['locality'], 'municipality': d['municipality'], 'country': d['country'], 'stateProvince': d['stateProvince'], 'country': d['county'] })
                 changes = pd.DataFrame(changes)
