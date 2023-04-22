@@ -53,6 +53,21 @@ args:
 
 The script generates a file in `downloads/run_<new-run>/tsvs/diffs/<old-run>.tsv` describing changes.
 
+## Matching
+
+To run:
+`python matching.py --ne-match <filename>`
+
+args:
+    --ne-match: Required. followed by filepath of tab separated file to parse
+    --column-name: Optional. The column NAME on which to perform the matching. Defaults to 'stateProvince'.
+
+The script generates 3 tab separated files in the same directory as the target file with the exact, fuzzy and nomatches. They should combine to contain all of the records in the original target file:  
+- `<fn>_NE_exact.<extension>`
+- `<fn>_NE_fuzzy.<extension>`
+- `<fn>_NE_no_match.<extension>`
+
+
 ## API Utils
 - `python api.py --total` -- Will hit the API and tell you the total number of occurrences
 - `python api.py --coll <int>` -- Will give you the code, name, and number of occurrences held by a the collection designated by that id.

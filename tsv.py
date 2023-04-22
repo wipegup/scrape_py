@@ -7,6 +7,7 @@ import csv_utils
 import numpy as np
 import json
 import utils
+import difflib
 
 def set_compare(new_set, old_set):
     return {'fresh': new_set - old_set, 'stale': old_set - new_set, 'common': old_set & new_set}
@@ -21,7 +22,6 @@ if __name__== "__main__":
     parser.add_argument('--diff', action='store_true')
     parser.add_argument('--prev-run')
     parser.add_argument('--coll', default='all')
-    parser.add_argument('--ne-match')
 
     args = parser.parse_args()
     hf = log_utils.create_default_timing_dict()
