@@ -115,6 +115,9 @@ def file_line_count(fn):
     else:
         return 0
 
+def is_file_not_empty(fn):
+    return file_line_count(fn) > 0
+
 def rewrite_hf(head_file_dict, k):
     write_pretty_json(head_file_dict[k]['fn'], head_file_dict[k]['body'])
 
