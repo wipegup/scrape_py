@@ -45,7 +45,7 @@ def convert_api_to_dl(j, **to_update):
             j['infraspecificEpithet'] = ''
     j['modified'] = j['dateLastModified']
     j['scientificName'] = j['sciname']
-    j['taxonID'] = str(j['tidinterpreted'])
+    j['taxonID'] = str(j['tidInterpreted'])
     j['sourcePrimaryKey-dbpk'] = j['dbpk']
     j['references'] = f'https://lichenportal.org/portal/collections/individual/index.php?occid={occ_id}'
     j['collID'] = str(j['collid'])
@@ -106,18 +106,21 @@ def deduplicate_json(fn):
     to_write=[]
     with open(fn,'r') as f:
         for row in f:
-            j = json.loads(row)
-            occ_id = str(j['occid'])
+            # j = json.loads(row)
+            # occ_id = str(j['occid'])
+
+            _, occ_id, *_ = row.split(' ')
+            occ_id = occ_id.replace(',', '')
             occ_id_k = occ_id[:2]
             occ_id_v = occ_id[2:]
             if occ_id_k not in occ_ids:
                 occ_ids[occ_id_k] = []
             if occ_id_v not in occ_ids[occ_id_k]:
-                to_write.append(j)
+                to_write.append(row)
                 occ_ids[occ_id_k].append(occ_id_v)
     with open(fn, 'w') as f:
         for r in to_write:
-            f.write(f'{json.dumps(r)}\n')
+            f.write(row)
 
 # Deduplicate CSV  (Unused)                  
 # def deduplicate(fn, out):
