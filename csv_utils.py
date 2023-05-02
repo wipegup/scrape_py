@@ -120,7 +120,7 @@ def deduplicate_json(fn):
                 occ_ids[occ_id_k].append(occ_id_v)
     with open(fn, 'w') as f:
         for r in to_write:
-            f.write(row)
+            f.write(r)
 
 # Deduplicate CSV  (Unused)                  
 # def deduplicate(fn, out):
