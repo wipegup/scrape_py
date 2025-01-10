@@ -37,7 +37,7 @@ def body_results(body):
 def get_paginated (endpoint, limit=300, offset=0, extra={}, msg=None, silent=True):
     params = {'limit': limit, 'offset': offset, **extra}
     msg = msg if msg else endpoint
-    res = RM.make_request(req.get, endpoint, params=params, timeout=2)
+    res = RM.make_request(req.get, endpoint, params=params, timeout=10)
 
     return res_success(res, endpoint, silent)
 
