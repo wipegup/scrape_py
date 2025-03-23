@@ -165,6 +165,8 @@ def transform(raw_dir, head_dir, clean_dir, tsv_dir, out_dl_tsv, no_dedup):
         csv_utils.add_json_to_dl_csv(clean_fn, out_dl_tsv, institutionCode=code)
 
     hf = log_utils.interval_update(hf, 'write_tsv', 'Done Writing to TSV')
+    from sql_utils import load_to_db
+    load_to_db(out_dl_tsv, raw_dir)
 
 def main(run_no, output_fn, no_transform, no_download, test_dl, no_dedup, occur_log_interval):
     import dirs
