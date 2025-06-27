@@ -61,11 +61,13 @@ def add_json_to_raw_csv(in_json, out_csv):
         fieldnames = firstline
     else:
         # Get Keys from Json Lines
-        with open(in_json, 'r') as f:
-            firstline = json.loads(f.readline())
-        fieldnames = firstline.keys()
+        line_ct = utils.file_line_count(in_json)
+        if line_ct > 0:
+            with open(in_json, 'r') as f:
+                firstline = json.loads(f.readline())
+            fieldnames = firstline.keys()
 
-    add_json_to_csv(in_json, out_csv, fieldnames)
+            add_json_to_csv(in_json, out_csv, fieldnames)
 
 def add_json_to_dl_csv(in_json, out_csv, target, **to_update):
     add_json_to_csv(in_json, out_csv, COL_LIST, json_convert=convert_api_to_dl, target=target, **to_update)
