@@ -5,7 +5,7 @@ import os
 import argparse
 
 TEST_COL_IDS = ['100', '101', '109', '144', '45']
-def download(head_dir, raw_dir, occur_log_interval, test_dl):
+def download(head_dir, raw_dir, occur_log_interval, test_dl, target):
     # Create Directories for Download if necessary
     for d in [head_dir, raw_dir]:
         if not os.path.exists(d):
@@ -13,8 +13,8 @@ def download(head_dir, raw_dir, occur_log_interval, test_dl):
 
     # Get head Information (hf = headfiles)
     hf = {
-        'full_coll': utils.get_full_info('coll', utils.get_coll, head_dir),
-        'full_occur': utils.get_full_info('occur', utils.get_occ, head_dir),
+        'full_coll': utils.get_full_info('coll', utils.get_coll, head_dir, target=target),
+        'full_occur': utils.get_full_info('occur', utils.get_occ, head_dir, target=target),
         'occur_req_log': {'fn': f'{head_dir}occur_req_log.json'},
         'count':{},
         'time':{}
@@ -39,7 +39,7 @@ def download(head_dir, raw_dir, occur_log_interval, test_dl):
             if test_dl and coll_id not in TEST_COL_IDS:
                 continue
             coll_ct_req_ct += 1
-            ct, results, _ = utils.get_occ(limit=300, coll_id=coll_id)
+            ct, results, _ = utils.get_occ(target, limit=300, coll_id=coll_id)
             raw_fn = utils.json_fn(raw_dir, coll_id)
             utils.append_results(raw_fn, results)
             records = utils.file_line_count(raw_fn)
@@ -87,7 +87,7 @@ def download(head_dir, raw_dir, occur_log_interval, test_dl):
         while new_req:
             # Add New Records
             offset += 300
-            total_record_ct, results, _ = utils.get_occ(offset=offset, limit=300, coll_id=coll_id)        
+            total_record_ct, results, _ = utils.get_occ(target, offset=offset, limit=300, coll_id=coll_id)        
             utils.append_results(raw_fn, results)
             json_lines = offset + len(results)
             log_update = {'last_offset': offset, 'records': json_lines}
@@ -108,7 +108,7 @@ def download(head_dir, raw_dir, occur_log_interval, test_dl):
                 hf = log_utils.occur_interval(hf, occur_request_ct)
     return True
 
-def transform(raw_dir, head_dir, clean_dir, tsv_dir, out_dl_tsv, no_dedup):
+def transform(raw_dir, head_dir, clean_dir, tsv_dir, out_dl_tsv, no_dedup, target):
     if not os.path.exists(tsv_dir):
         os.makedirs(tsv_dir)
     raw_tsv = f'{tsv_dir}full.tsv'
@@ -162,29 +162,29 @@ def transform(raw_dir, head_dir, clean_dir, tsv_dir, out_dl_tsv, no_dedup):
         code = hf['req_log'][coll_id]['code']
         clean_fn = f'{clean_dir}{fn}'
         csv_utils.add_json_to_raw_csv(clean_fn, raw_tsv)
-        csv_utils.add_json_to_dl_csv(clean_fn, out_dl_tsv, institutionCode=code)
+        csv_utils.add_json_to_dl_csv(clean_fn, out_dl_tsv, target=target, institutionCode=code)
 
     hf = log_utils.interval_update(hf, 'write_tsv', 'Done Writing to TSV')
 
-def main(run_no, output_fn, no_transform, no_download, test_dl, no_dedup, occur_log_interval):
+def main(run_no, output_fn, no_transform, no_download, test_dl, no_dedup, occur_log_interval, target):
     import dirs
     occur_log_interval=10
-
     head_dir = dirs.head_dir(run_no)
     raw_dir = dirs.raw_dir(run_no)
     clean_dir = dirs.clean_dir(run_no)
     tsv_dir = dirs.tsv_dir(run_no)
     out_dl_tsv = f'{tsv_dir}{output_fn}.tsv'
-
+    print(target)
     if not no_download:
-        download(head_dir, raw_dir, occur_log_interval, test_dl)
+        download(head_dir, raw_dir, occur_log_interval, test_dl, target)
     
     if not no_transform:
-        transform(raw_dir, head_dir, clean_dir, tsv_dir, out_dl_tsv, no_dedup)
+        transform(raw_dir, head_dir, clean_dir, tsv_dir, out_dl_tsv, no_dedup, target)
     
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-r', '--run-no', required=True)
+    parser.add_argument('-t', '--target', type=str, required=True)
     parser.add_argument('--no-transform', action='store_true')
     parser.add_argument('--no-download', action='store_true')
     parser.add_argument('--test-dl', action='store_true')
@@ -193,8 +193,9 @@ if __name__ == "__main__":
     parser.add_argument('--occur-log-interval', default=10, type=int)
 
     args = vars(parser.parse_args())
+    args['target'] = utils.target_parse(args['target'])
 
-    main(**args )
+    main(**args)
 
 ## TODO:
 # Deduplicate file

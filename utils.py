@@ -6,7 +6,11 @@ from request_manager import RequestManager
 import log_utils
 import re
 
-API_ROOT = "https://lichenportal.org/portal/api/v2"
+def api_root(target):
+    return f"{portal_root(target)}/api/v2"
+
+def portal_root(target):
+    return  f"https://{target}portal.org/portal"
 
 ## Timing 
 TIME_FMT = "%H:%M:%S"
@@ -17,11 +21,11 @@ def pretty_time(t):
     return t.strftime(TIME_FMT)
 
 ## Endpoints
-def coll_endpoint (coll_id=''):
-    return f'{API_ROOT}/collection/{coll_id}'
+def coll_endpoint (target, coll_id=''):
+    return f'{api_root(target)}/collection/{coll_id}'
 
-def occ_endpoint ():
-    return f'{API_ROOT}/occurrence/search'
+def occ_endpoint(target):
+    return f'{api_root(target)}/occurrence/search'
 
 ## Requests
 RM = RequestManager()
@@ -50,14 +54,14 @@ def res_success (res, msg, silent):
         body = res_body(res)
         return (body_count(body), body_results(body), body)
 
-def get_occ(offset=0, limit=0, coll_id=None):
+def get_occ(target, offset=0, limit=0, coll_id=None):
     extra = {'collid': coll_id} if coll_id else {}
     msg = f"Occur- CollID: {coll_id}; Offset: {offset}; Limit: {limit}"
-    return get_paginated(occ_endpoint(), offset=offset, limit=limit, extra=extra)
+    return get_paginated(occ_endpoint(target), offset=offset, limit=limit, extra=extra)
 
-def get_coll():
+def get_coll(target):
     msg = "Collection Request"
-    return get_paginated(coll_endpoint(), msg=msg)
+    return get_paginated(coll_endpoint(target), msg=msg)
 
 ## Unused Generator function
 # def get_all_coll_occ(coll_id, starting_offset=None):
@@ -69,13 +73,13 @@ def get_coll():
 #         yield (offset, total_record_ct, results, body)
 #         new_req = offset + len(results) < total_record_ct
 
-def get_full_info(n, f, head_dir):
+def get_full_info(n, f, head_dir, **fn_params):
     to_ret={}
     k = f'full_{n}'
     pretty = k.replace('_', ' ')
     print(f"\nFinding {pretty} info --")
     to_ret['fn'] = f'{head_dir}{k}.json'
-    to_ret['ct'], to_ret['res'], to_ret['body'] = read_or_create_file( to_ret['fn'], f, pretty)
+    to_ret['ct'], to_ret['res'], to_ret['body'] = read_or_create_file( to_ret['fn'], f, pretty, **fn_params)
     print(f"{pretty.capitalize()} Count: {to_ret['ct']:,}")
     return to_ret
 
@@ -130,13 +134,19 @@ def verify_coll_complete(req_log, coll_id, json_total):
         print(f"WARN: collection {coll_id} file record mismatch -- actual(expected): {json_total}({req_log['occur_total']})")
         return False
 
-def read_or_create_file(fn, func, msg):
+def read_or_create_file(fn, func, msg, **fn_params):
     if os.path.exists(fn):
         body = read_json(fn)
         ct = body_count(body)
         res = body_results(body)
     else:
         print(f'Making {msg} request')
-        ct, res, body = func()
+        ct, res, body = func(**fn_params)
         write_pretty_json(fn, body)
     return (ct, res, body)
+
+def target_parse(target_val):
+    if target_val.lower() == 'l':
+        return 'lichen'
+    elif target_val.lower() == 'b':
+        return 'bryophyte'

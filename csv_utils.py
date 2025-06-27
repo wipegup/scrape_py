@@ -32,7 +32,7 @@ def clean_json_file_whitespace(in_json, out_json):
                 j = clean_dict_val_whitespace(j)
                 out_f.write(f'{json.dumps(j)}\n')
 
-def convert_api_to_dl(j, **to_update):
+def convert_api_to_dl(j, target, **to_update):
     occ_id = str(j['occid'])
     # j['institutionCode'] = ## FROM COLL DATA
     j.update(**to_update)
@@ -47,7 +47,7 @@ def convert_api_to_dl(j, **to_update):
     j['scientificName'] = j['sciname']
     j['taxonID'] = str(j['tidInterpreted'])
     j['sourcePrimaryKey-dbpk'] = j['dbpk']
-    j['references'] = f'https://lichenportal.org/portal/collections/individual/index.php?occid={occ_id}'
+    j['references'] = f'{utils.portal_root(target)}/collections/individual/index.php?occid={occ_id}'
     j['collID'] = str(j['collid'])
     return j
 
@@ -67,8 +67,8 @@ def add_json_to_raw_csv(in_json, out_csv):
 
     add_json_to_csv(in_json, out_csv, fieldnames)
 
-def add_json_to_dl_csv(in_json, out_csv, **to_update):
-    add_json_to_csv(in_json, out_csv, COL_LIST, json_convert=convert_api_to_dl, **to_update)
+def add_json_to_dl_csv(in_json, out_csv, target, **to_update):
+    add_json_to_csv(in_json, out_csv, COL_LIST, json_convert=convert_api_to_dl, target=target, **to_update)
 
 def add_json_to_csv(in_json, out_csv, fieldnames, json_convert=lambda x:x, **convert_args):
     csv_exists = os.path.exists(out_csv)
