@@ -43,7 +43,7 @@ def get_paginated (endpoint, limit=300, offset=0, extra={}, msg=None, silent=Tru
 
 def res_success (res, msg, silent):
     if (res.status_code != 200):
-        raise Exception(f'{msg} error')
+        raise Exception(f'{msg} {res.status_code} error')
     else:
         if not silent:
             print(f"Got {msg}")
